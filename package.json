@@ -1,0 +1,9 @@
+{
+  "name": "health-center-club",
+  "private": true,
+  "scripts": {
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm install && npm run build",
+    "preview": "cd client && npm run preview"
+  }
+}
