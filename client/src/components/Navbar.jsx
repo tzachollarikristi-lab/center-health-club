@@ -33,12 +33,12 @@ function Navbar() {
               alt="Σύλλογος Κέντρου Υγείας" 
               className="h-10 sm:h-12 md:h-14 w-auto max-w-[80px] rounded-xl object-contain shadow-sm transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-xs font-extrabold text-slate-900 leading-tight tracking-tight">
-                <span className="block">ΣΥΛΛΟΓΟΣ ΦΙΛΩΝ ΣΤΗΡΙΞΗΣ ΚΕΝΤΡΟΥ</span>
-                <span className="block text-[11px] font-bold text-slate-800">ΥΓΕΙΑΣ ΤΡΟΠΑΙΩΝ ΔΥΤΙΚΗΣ ΓΟΡΤΥΝΙΑΣ</span>
+            <div className="block min-w-0">
+              <h1 className="text-[10px] sm:text-xs font-extrabold text-slate-900 leading-tight tracking-tight">
+                <span className="block truncate">ΣΥΛΛΟΓΟΣ ΦΙΛΩΝ ΣΤΗΡΙΞΗΣ ΚΕΝΤΡΟΥ</span>
+                <span className="block text-[9px] sm:text-[11px] font-bold text-slate-800 truncate">ΥΓΕΙΑΣ ΤΡΟΠΑΙΩΝ ΔΥΤΙΚΗΣ ΓΟΡΤΥΝΙΑΣ</span>
               </h1>
-              <p className="club-subtitle text-[10px] md:text-[12px] text-emerald-600 mt-0.5 tracking-widest font-bold">
+              <p className="club-subtitle text-[9px] sm:text-[10px] md:text-[12px] text-emerald-600 mt-0.5 tracking-widest font-bold">
                 ΕΛΠΙΔΑ ΖΩΗΣ
               </p>
             </div>

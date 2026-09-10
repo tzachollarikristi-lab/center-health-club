@@ -128,25 +128,70 @@ function MessageDetailModal({ message, onClose }) {
   );
 }
 
+function ApplicationDetailModal({ application, onClose, onOpenFile, onPay, onReject }) {
+  if (!application) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-6">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-fade-in-up">
+        <div className="flex justify-between items-start gap-4 border-b border-slate-200 pb-4">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{application.name}</h3>
+            <p className="text-sm text-slate-500">Αίτηση εγγραφής μέλους</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <IconX className="h-6 w-6 text-slate-500" />
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-700">
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Email:</span> {application.email || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Τηλέφωνο:</span> {application.phone || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Όνομα πατρός:</span> {application.father_name || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Όνομα μητρός:</span> {application.mother_name || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Γέννηση:</span> {application.birth_date || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Δελτίο ταυτότητας:</span> {application.id_number || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3 md:col-span-2"><span className="font-semibold">Διεύθυνση:</span> {application.address || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Τ.Κ.:</span> {application.postal_code || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Περιοχή:</span> {application.area || '—'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Ιδιότητα:</span> {application.membership_type || 'Μέλος'}</div>
+          <div className="rounded-xl bg-slate-50 p-3"><span className="font-semibold">Κατάθεση:</span> {application.payment_reference || '—'}</div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button type="button" onClick={() => onOpenFile(application)} className="btn-primary text-sm">Προβολή Αρχείου</button>
+          <button type="button" onClick={() => onPay(application)} className="btn-secondary text-sm">Πληρώθηκε</button>
+          <button type="button" onClick={() => onReject(application)} className="btn-secondary text-sm text-red-600">Απόρριψη</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Sidebar Component ─────────────────────────────────────────
-function Sidebar({ active, setActive, unreadCount }) {
+function Sidebar({ active, setActive, unreadCount, memberCount, mobile = false, onSelect }) {
   const items = [
-    { label: 'Overview', icon: IconOverview },
-    { label: 'Announcements', icon: IconAnnouncement },
-    { label: 'Categories', icon: IconCategory },
-    { label: 'Documents', icon: IconDocument },
-    { label: 'Gallery', icon: IconGallery },
-    { label: 'Messages', icon: IconMessages, badge: unreadCount },
-    { label: 'Settings', icon: IconSettings },
+    { label: 'Επισκόπηση', icon: IconOverview },
+    { label: 'Ανακοινώσεις', icon: IconAnnouncement },
+    { label: 'Κατηγορίες', icon: IconCategory },
+    { label: 'Έγγραφα', icon: IconDocument },
+    { label: 'Γκαλερί', icon: IconGallery },
+    { label: 'Μηνύματα', icon: IconMessages, badge: unreadCount },
+    { label: 'Διοίκηση & Μέλη', icon: IconImage },
+    { label: 'Μέλη', icon: IconDocument, badge: memberCount },
+    { label: 'Ρυθμίσεις', icon: IconSettings },
   ];
 
   return (
-    <aside className="w-full lg:w-56 shrink-0">
-      <nav className="bg-white rounded-xl border border-slate-200/80 p-2 shadow-soft">
+    <aside className={`${mobile ? 'w-full' : 'w-full lg:w-56 shrink-0'}`}>
+      <nav className={`${mobile ? 'bg-white rounded-r-2xl border-r border-slate-200/80 p-2 shadow-xl h-full' : 'bg-white rounded-xl border border-slate-200/80 p-2 shadow-soft'}`}>
         {items.map(({ label, icon: Icon, badge }) => (
           <button
             key={label}
-            onClick={() => setActive(label)}
+            onClick={() => {
+              setActive(label);
+              if (onSelect) onSelect();
+            }}
             className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2.5 ${
               active === label
                 ? 'bg-brand-50 text-brand-700 shadow-sm'
@@ -191,7 +236,8 @@ function formatDate(value) {
 
 // ─── Main Component ──────────────────────────────────────────────
 export default function AdminDashboard() {
-  const [active, setActive] = useState('Overview');
+  const [active, setActive] = useState('Επισκόπηση');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [admin, setAdmin] = useState(null);
@@ -210,6 +256,8 @@ export default function AdminDashboard() {
 
   // Message detail modal
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [applicationReadOnly, setApplicationReadOnly] = useState(false);
 
   // Data states
   const [announcements, setAnnouncements] = useState([]);
@@ -217,6 +265,8 @@ export default function AdminDashboard() {
   const [documents, setDocuments] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [settings, setSettings] = useState({});
 
   // Form states
@@ -229,6 +279,8 @@ export default function AdminDashboard() {
   const [docFile, setDocFile] = useState(null);
   const [galleryForm, setGalleryForm] = useState({ title: '', description: '', image_url: '' });
   const [galleryImage, setGalleryImage] = useState('');
+  const [memberForm, setMemberForm] = useState({ name: '', role: 'Πρόεδρος', phone: '' });
+  const [editingMember, setEditingMember] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
@@ -263,25 +315,29 @@ export default function AdminDashboard() {
   async function fetchAll() {
     try {
       setLoading(true);
-      const [ann, cat, doc, gal, msg, set] = await Promise.all([
+      const [ann, cat, doc, gal, msg, mem, apps, set] = await Promise.all([
         supabase.from('announcements').select('*').order('publish_date', { ascending: false }),
         supabase.from('categories').select('*').order('name'),
         supabase.from('documents').select('*').order('created_at', { ascending: false }),
         supabase.from('gallery').select('*').order('created_at', { ascending: false }),
         supabase.from('messages').select('*').order('created_at', { ascending: false }),
+        supabase.from('club_members').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+        supabase.from('membership_applications').select('*').order('created_at', { ascending: false }),
         supabase.from('site_settings').select('key, value'),
-      ]);
-      if (ann.error) throw ann.error;
+      ]);      if (ann.error) throw ann.error;
       if (cat.error) throw cat.error;
       if (doc.error) throw doc.error;
       if (gal.error) throw gal.error;
       if (msg.error) throw msg.error;
+      if (mem.error) throw mem.error;
       if (set.error) throw set.error;
       setAnnouncements(ann.data || []);
       setCategories(cat.data || []);
       setDocuments(doc.data || []);
       setGallery(gal.data || []);
       setMessages(msg.data || []);
+      setMembers(mem.data || []);
+      setApplications(apps.data || []);
       if (set.data) {
         const obj = Object.fromEntries(set.data.map(row => [row.key, row.value]));
         setSettings(obj);
@@ -407,7 +463,7 @@ export default function AdminDashboard() {
       images: item.images || [],
     });
     setStep(0);
-    setActive('Announcements');
+    setActive('Ανακοινώσεις');
   }
 
   async function deleteAnnouncement(id) {
@@ -549,6 +605,10 @@ export default function AdminDashboard() {
     );
   }
 
+  function normalizeBoolean(value) {
+    return value === true || value === 1 || value === '1' || value === 'true';
+  }
+
   // ─── Messages ──────────────────────────────────────────────────
   async function deleteMessage(id) {
     confirmAction(
@@ -565,7 +625,7 @@ export default function AdminDashboard() {
 
   async function toggleMessageRead(id, read) {
     try {
-      const { error } = await supabase.from('messages').update({ is_read: read ? 1 : 0 }).eq('id', id);
+      const { error } = await supabase.from('messages').update({ is_read: Boolean(read) }).eq('id', id);
       if (error) throw error;
       showStatus(read ? 'Σημειώθηκε ως αναγνωσμένο.' : 'Σημειώθηκε ως μη αναγνωσμένο.', 'success');
       await fetchAll();
@@ -574,10 +634,278 @@ export default function AdminDashboard() {
     }
   }
 
+  // ─── Club leadership ───────────────────────────────────────────
+  async function saveMember(e) {
+    e.preventDefault();
+    const cleanName = memberForm.name.trim();
+    const cleanPhone = memberForm.phone.replace(/\D/g, '').slice(0, 10);
+    const roleOrder = ['Πρόεδρος', 'Αντιπρόεδρος', 'Γραμματέας', 'Ταμίας', 'Μέλος', 'Τακτικό Μέλος'];
+
+    if (!cleanName || !cleanPhone) {
+      showToast('Όνομα και έγκυρο τηλέφωνο απαιτούνται.', 'error');
+      return;
+    }
+    if (cleanPhone.length !== 10) {
+      showToast('Το τηλέφωνο πρέπει να έχει ακριβώς 10 αριθμούς.', 'error');
+      return;
+    }
+
+    try {
+      const payload = {
+        name: cleanName,
+        role: memberForm.role || 'Μέλος',
+        phone: cleanPhone,
+        sort_order: roleOrder.indexOf(memberForm.role) >= 0 ? roleOrder.indexOf(memberForm.role) : 99,
+      };
+
+      if (editingMember) {
+        const { error } = await supabase.from('club_members').update(payload).eq('id', editingMember.id);
+        if (error) throw error;
+        showStatus('Το μέλος ενημερώθηκε.', 'success');
+      } else {
+        const { error } = await supabase.from('club_members').insert([payload]);
+        if (error) throw error;
+        showStatus('Το μέλος προστέθηκε.', 'success');
+      }
+
+      setMemberForm({ name: '', role: 'Πρόεδρος', phone: '' });
+      setEditingMember(null);
+      await fetchAll();
+    } catch (err) {
+      showToast('Σφάλμα: ' + err.message, 'error');
+    }
+  }
+
+  async function deleteMember(id) {
+    confirmAction(
+      'Διαγραφή Μέλους',
+      'Θέλετε να διαγράψετε αυτό το μέλος της διοίκησης;',
+      async () => {
+        const { error } = await supabase.from('club_members').delete().eq('id', id);
+        if (error) throw error;
+        showStatus('Το μέλος διαγράφηκε.', 'success');
+        await fetchAll();
+      }
+    );
+  }
+
+  function editMember(member) {
+    setEditingMember(member);
+    setMemberForm({
+      name: member.name || '',
+      role: member.role || 'Πρόεδρος',
+      phone: member.phone || '',
+    });
+    setActive('Διοίκηση & Μέλη');
+  }
+
+  const emptyApplicationForm = {
+    name: '',
+    father_name: '',
+    mother_name: '',
+    birth_date: '',
+    email: '',
+    phone: '',
+    address: '',
+    postal_code: '',
+    area: '',
+    id_number: '',
+    membership_type: 'Τακτικό Μέλος',
+    payment_reference: '',
+    admin_note: '',
+    status: 'pending',
+  };
+
+  const [applicationForm, setApplicationForm] = useState(emptyApplicationForm);
+
+  function openApplicationDetail(application, readOnly = false) {
+    setSelectedApplication(application);
+    setApplicationReadOnly(readOnly);
+    setApplicationForm({
+      name: application?.name || '',
+      father_name: application?.father_name || '',
+      mother_name: application?.mother_name || '',
+      birth_date: application?.birth_date || '',
+      email: application?.email || '',
+      phone: application?.phone || '',
+      address: application?.address || '',
+      postal_code: application?.postal_code || '',
+      area: application?.area || '',
+      id_number: application?.id_number || '',
+      membership_type: application?.membership_type || 'Τακτικό Μέλος',
+      payment_reference: application?.payment_reference || '',
+      admin_note: application?.admin_note || '',
+      status: application?.status || 'pending',
+    });
+  }
+
+  function handleApplicationFieldChange(field, value) {
+    const next = { ...applicationForm, [field]: value };
+    if (field === 'name') next.name = value.toUpperCase();
+    if (field === 'phone') next.phone = value.replace(/\D/g, '').slice(0, 10);
+    setApplicationForm(next);
+  }
+
+  function openApplicationFile(application) {
+    const printWindow = window.open('', '_blank', 'width=1000,height=1200');
+    if (!printWindow) return;
+
+    const rows = [
+      ['Ονοματεπώνυμο', application?.name || '—'],
+      ['Όνομα πατρός', application?.father_name || '—'],
+      ['Όνομα μητρός', application?.mother_name || '—'],
+      ['Ημερομηνία γέννησης', application?.birth_date || '—'],
+      ['Αριθμός Δελτίου Ταυτότητας', application?.id_number || '—'],
+      ['Διεύθυνση κατοικίας', application?.address || '—'],
+      ['Τ.Κ.', application?.postal_code || '—'],
+      ['Περιοχή', application?.area || '—'],
+      ['Τηλέφωνο', application?.phone || '—'],
+      ['Email', application?.email || '—'],
+      ['Ιδιότητα μέλους', application?.membership_type || 'Τακτικό Μέλος'],
+    ];
+
+    const tableRows = rows.map(([label, value]) => `
+      <tr>
+        <td style="padding: 10px 12px; border: 1px solid #cbd5e1; font-weight: 700; width: 42%; background: #f8fafc; color: #0f172a; font-family: 'Times New Roman', serif; text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px;">${label}</td>
+        <td style="padding: 10px 12px; border: 1px solid #cbd5e1; color: #1e293b; font-family: 'Times New Roman', serif; font-size: 13px;">${value}</td>
+      </tr>
+    `).join('');
+
+    const signatureMarkup = application?.signature_url
+      ? `<img src="${application.signature_url}" alt="Υπογραφή" style="max-width: 260px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto; filter: contrast(1.05);" />`
+      : `<div style="height: 78px; display: flex; align-items: end; justify-content: center; font-size: 28px; color: #0f172a;">__________________</div>`;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Αίτηση Εγγραφής Μέλους</title>
+          <style>
+            :root { --ink: #101828; --muted: #475467; --line: #cbd5e1; --panel: #f8fafc; }
+            body { font-family: 'Times New Roman', Georgia, serif; margin: 28px; color: var(--ink); background: #ffffff; }
+            .official { max-width: 900px; margin: 0 auto; }
+            .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--ink); padding-bottom: 16px; margin-bottom: 18px; }
+            .logo-box { width: 116px; height: 116px; border: 2px solid var(--line); border-radius: 18px; background: linear-gradient(135deg, #f8fbff 0%, #edf6ff 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(15,23,42,0.06); }
+            .logo-box img { width: 88px; height: 88px; object-fit: contain; }
+            .club-title { text-align: right; font-weight: 700; line-height: 1.35; font-size: 15px; letter-spacing: 0.06em; }
+            .section-title { text-align: center; font-size: 29px; font-weight: 700; letter-spacing: 0.08em; margin: 18px 0 8px; }
+            .subline { text-align: center; font-size: 17px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 16px; }
+            .statement { font-size: 15px; line-height: 1.8; margin: 18px 0 14px; color: #111827; }
+            table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; gap: 26px; }
+            .signature-box, .date-box { flex: 1; border-top: 2px solid var(--ink); text-align: center; padding-top: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+            .signature-box label { display: block; margin-bottom: 10px; font-weight: 700; }
+            .small-note { margin-top: 12px; font-size: 11px; color: var(--muted); text-align: center; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="official">
+            <div class="header">
+              <div class="logo-box">
+                <img src="/logo.png" alt="Club Logo" />
+              </div>
+              <div class="club-title">
+                <div>ΣΥΛΛΟΓΟΣ</div>
+                <div>ΦΙΛΩΝ ΣΤΗΡΙΞΗΣ</div>
+                <div>ΚΕΝΤΡΟΥ ΥΓΕΙΑΣ</div>
+                <div>ΤΡΟΠΑΙΩΝ</div>
+                <div>ΕΛΠΙΔΑ ΖΩΗΣ</div>
+              </div>
+            </div>
+
+            <div class="section-title">ΑΙΤΗΣΗ ΕΓΓΡΑΦΗΣ ΜΕΛΟΥΣ</div>
+            <div class="subline">ΕΛΠΙΔΑ ΖΩΗΣ</div>
+
+            <div class="statement">Παρακαλώ να με εγγράψετε ως μέλος του συλλόγου, αποδεχόμενος/η το καταστατικό και τους σκοπούς του.</div>
+
+            <table>${tableRows}</table>
+
+            <div class="statement">
+              <strong>Ιδιότητα μέλους:</strong> ${application?.membership_type || 'Τακτικό Μέλος'}<br />
+              Δηλώνω υπεύθυνα ότι αποδέχομαι το καταστατικό του συλλόγου και τις αποφάσεις των οργάνων του.
+            </div>
+
+            <div class="footer">
+              <div class="date-box">Ημερομηνία εγγραφής:<br />${application?.created_at ? new Date(application.created_at).toLocaleDateString('el-GR') : new Date().toLocaleDateString('el-GR')}</div>
+              <div class="signature-box">
+                <label>Υπογραφή</label>
+                ${signatureMarkup}
+              </div>
+            </div>
+            <div class="small-note">Έγγραφο υποβλήθηκε μέσω της ηλεκτρονικής διαδικασίας εγγραφής του συλλόγου.</div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 250);
+  }
+
+  async function saveApplicationChanges(e) {
+    e.preventDefault();
+    if (!selectedApplication) return;
+
+    const cleanPhone = applicationForm.phone.replace(/\D/g, '').slice(0, 10);
+    if (!applicationForm.name.trim() || !applicationForm.email.trim() || !cleanPhone) {
+      showToast('Συμπληρώστε όνομα, email και έγκυρο τηλέφωνο.', 'error');
+      return;
+    }
+    if (cleanPhone.length !== 10) {
+      showToast('Το τηλέφωνο πρέπει να έχει 10 αριθμούς.', 'error');
+      return;
+    }
+
+    try {
+      const payload = {
+        name: applicationForm.name.trim(),
+        father_name: applicationForm.father_name.trim(),
+        mother_name: applicationForm.mother_name.trim(),
+        birth_date: applicationForm.birth_date,
+        email: applicationForm.email.trim(),
+        phone: cleanPhone,
+        address: applicationForm.address.trim(),
+        postal_code: applicationForm.postal_code.trim(),
+        area: applicationForm.area.trim(),
+        id_number: applicationForm.id_number.trim(),
+        membership_type: applicationForm.membership_type || 'Τακτικό Μέλος',
+        payment_reference: applicationForm.payment_reference.trim(),
+        admin_note: applicationForm.admin_note.trim(),
+        status: applicationForm.status || 'pending',
+      };
+
+      const { error } = await supabase.from('membership_applications').update(payload).eq('id', selectedApplication.id);
+      if (error) throw error;
+      await fetchAll();
+      setSelectedApplication(prev => prev ? { ...prev, ...payload } : prev);
+      showStatus('Η αίτηση ενημερώθηκε.', 'success');
+    } catch (err) {
+      showToast('Σφάλμα αποθήκευσης αίτησης: ' + err.message, 'error');
+    }
+  }
+
   // ─── Settings ──────────────────────────────────────────────────
+  async function savePresidentMessage(e) {
+    e.preventDefault();
+    const keys = ['president_name', 'president_title', 'president_image_url', 'president_message'];
+    try {
+      for (const key of keys) {
+        const value = settings[key] ?? '';
+        const { error } = await supabase
+          .from('site_settings')
+          .upsert({ key, value: String(value) }, { onConflict: 'key' });
+        if (error) throw error;
+      }
+      showStatus('Το μήνυμα προέδρου αποθηκεύτηκε.', 'success');
+      refreshSettings();
+    } catch (err) {
+      showToast('Σφάλμα: ' + err.message, 'error');
+    }
+  }
+
   async function saveSettings(e) {
     e.preventDefault();
-    const entries = Object.entries(settings);
+    const entries = Object.entries(settings).filter(([key]) => !['president_name', 'president_title', 'president_image_url', 'president_message'].includes(key));
     try {
       for (const [key, value] of entries) {
         const { error } = await supabase
@@ -643,10 +971,21 @@ export default function AdminDashboard() {
   const total = announcements.length;
   const pinned = announcements.filter(a => a.pinned).length;
   const recent = announcements.slice(0, 5);
-  const unreadMessages = messages.filter(m => !m.is_read).length;
+  const unreadMessages = messages.filter(m => !normalizeBoolean(m.is_read)).length;
   const totalMessages = messages.length;
   const totalGallery = gallery.length;
   const totalDocs = documents.length;
+  const boardRoles = ['Πρόεδρος', 'Αντιπρόεδρος', 'Γραμματέας', 'Ταμίας', 'Μέλος'];
+  const boardMembers = members.filter(member => boardRoles.includes(member.role || ''));
+  const regularMembers = [];
+  const isMembershipExpired = (application) => {
+    if (!application?.created_at || application.status !== 'accepted') return false;
+    const expiryTime = new Date(application.created_at).getTime() + 31536000000;
+    return Date.now() > expiryTime;
+  };
+  const acceptedMembers = (applications || []).filter(app => app.status === 'accepted' && !isMembershipExpired(app));
+  const pendingApplications = (applications || []).filter(app => app.status === 'pending' || isMembershipExpired(app));
+  const newPendingMembersCount = pendingApplications.length;
 
   // ─── Rendering ──────────────────────────────────────────────────
   if (loading) return <Loading full message="Φόρτωση πίνακα διαχείρισης..." />;
@@ -672,9 +1011,21 @@ export default function AdminDashboard() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Πίνακας Διαχείρισης</h1>
-          {admin && <p className="text-sm text-slate-500">Συνδεδεμένος ως {admin.name}</p>}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            className="lg:hidden inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-600 shadow-sm"
+            aria-label="Open menu"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Πίνακας Διαχείρισης</h1>
+            {admin && <p className="text-sm text-slate-500">Συνδεδεμένος ως {admin.name}</p>}
+          </div>
         </div>
         <button onClick={logout} className="btn-secondary text-sm px-4 py-2">Αποσύνδεση</button>
       </div>
@@ -686,11 +1037,29 @@ export default function AdminDashboard() {
       )}
 
       <div className="flex flex-col lg:flex-row gap-6">
-        <Sidebar active={active} setActive={setActive} unreadCount={unreadMessages} />
+        <div className="hidden lg:block">
+          <Sidebar active={active} setActive={setActive} unreadCount={unreadMessages} memberCount={newPendingMembersCount} />
+        </div>
+
+        {mobileSidebarOpen && (
+          <div className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" onClick={() => setMobileSidebarOpen(false)}>
+            <div className="absolute inset-y-0 right-0 w-[82%] max-w-sm bg-white shadow-2xl p-3 transform transition-transform duration-300" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                <h2 className="font-bold text-slate-800">Μενού</h2>
+                <button type="button" onClick={() => setMobileSidebarOpen(false)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <Sidebar active={active} setActive={setActive} unreadCount={unreadMessages} memberCount={newPendingMembersCount} mobile onSelect={() => setMobileSidebarOpen(false)} />
+            </div>
+          </div>
+        )}
 
         <main className="flex-1 min-w-0">
           {/* ─── Overview ──────────────────────────────────────── */}
-          {active === 'Overview' && (
+          {active === 'Επισκόπηση' && (
             <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="card p-4 text-center">
@@ -763,7 +1132,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ─── Announcements ────────────────────────────────── */}
-          {active === 'Announcements' && (
+          {active === 'Ανακοινώσεις' && (
             <div>
               <div className="card p-6 mb-6">
                 <h3 className="font-bold mb-4">{editingAnnounce ? 'Επεξεργασία Ανακοίνωσης' : 'Νέα Ανακοίνωση'}</h3>
@@ -882,7 +1251,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ─── Categories ────────────────────────────────────── */}
-          {active === 'Categories' && (
+          {active === 'Κατηγορίες' && (
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="card p-6">
                 <h3 className="font-bold mb-4">Νέα Κατηγορία</h3>
@@ -903,7 +1272,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ─── Documents ────────────────────────────────────── */}
-          {active === 'Documents' && (
+          {active === 'Έγγραφα' && (
             <div>
               <div className="card p-6 mb-6">
                 <h3 className="font-bold mb-4">Προσθήκη Εγγράφου</h3>
@@ -940,7 +1309,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ─── Gallery ────────────────────────────────────────── */}
-          {active === 'Gallery' && (
+          {active === 'Γκαλερί' && (
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="card p-6">
                 <h3 className="font-bold mb-4">Προσθήκη Φωτογραφίας</h3>
@@ -969,11 +1338,11 @@ export default function AdminDashboard() {
           )}
 
           {/* ─── Messages ──────────────────────────────────────── */}
-          {active === 'Messages' && (
+          {active === 'Μηνύματα' && (
             <div className="space-y-3">
               {messages.length === 0 && <div className="card p-6 text-center text-slate-500">Δεν υπάρχουν μηνύματα.</div>}
               {messages.map(m => {
-                const unread = !m.is_read;
+                const unread = !normalizeBoolean(m.is_read);
                 const preview = m.message?.length > 120 ? m.message.slice(0, 120) + '...' : m.message;
                 return (
                   <div
@@ -998,7 +1367,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex gap-2 shrink-0 mt-1">
                         <button
-                          onClick={(e) => { e.stopPropagation(); toggleMessageRead(m.id, !unread); }}
+                          onClick={(e) => { e.stopPropagation(); toggleMessageRead(m.id, unread ? true : false); }}
                           className="text-xs text-brand-600 hover:text-brand-800"
                         >
                           {unread ? 'Σημείωση ως αναγνωσμένο' : 'Μη αναγνωσμένο'}
@@ -1017,23 +1386,349 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* ─── Leadership & Members ────────────────────────────────── */}
+          {active === 'Διοίκηση & Μέλη' && (
+            <div className="grid gap-6">
+              <div className="card p-6">
+                <h3 className="font-bold mb-4">{editingMember ? 'Επεξεργασία Μέλους' : 'Προσθήκη Μέλους Διοίκησης'}</h3>
+                <form onSubmit={saveMember} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Ονοματεπώνυμο</label>
+                    <input
+                      className="input mt-1"
+                      value={memberForm.name}
+                      onChange={e => setMemberForm({ ...memberForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Ρόλος</label>
+                    <select
+                      className="input mt-1"
+                      value={memberForm.role}
+                      onChange={e => setMemberForm({ ...memberForm, role: e.target.value })}
+                    >
+                      <option value="Πρόεδρος">Πρόεδρος</option>
+                      <option value="Αντιπρόεδρος">Αντιπρόεδρος</option>
+                      <option value="Γραμματέας">Γραμματέας</option>
+                      <option value="Ταμίας">Ταμίας</option>
+                      <option value="Μέλος">Μέλος</option>
+                      <option value="Τακτικό Μέλος">Τακτικό Μέλος</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Τηλέφωνο</label>
+                    <input
+                      className="input mt-1"
+                      value={memberForm.phone}
+                      onChange={e => setMemberForm({ ...memberForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-3 flex gap-2">
+                    <button type="submit" className="btn-primary">
+                      {editingMember ? 'Ενημέρωση' : 'Προσθήκη'}
+                    </button>
+                    {editingMember && (
+                      <button type="button" className="btn-secondary" onClick={() => {
+                        setEditingMember(null);
+                        setMemberForm({ name: '', role: 'Πρόεδρος', phone: '' });
+                      }}>
+                        Άκυρο
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              <div className="card p-6">
+                <h3 className="font-bold mb-4">Μήνυμα Προέδρου</h3>
+                <form onSubmit={savePresidentMessage} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Όνομα Προέδρου</label>
+                    <input
+                      className="input mt-1"
+                      value={settings.president_name || ''}
+                      onChange={e => setSettings({ ...settings, president_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Θέση / Τίτλος</label>
+                    <input
+                      className="input mt-1"
+                      value={settings.president_title || ''}
+                      onChange={e => setSettings({ ...settings, president_title: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">URL Φωτογραφίας</label>
+                    <input
+                      className="input mt-1"
+                      value={settings.president_image_url || ''}
+                      onChange={e => setSettings({ ...settings, president_image_url: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">Κείμενο Μηνύματος</label>
+                    <textarea
+                      className="input mt-1 min-h-[180px]"
+                      value={settings.president_message || ''}
+                      onChange={e => setSettings({ ...settings, president_message: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button type="submit" className="btn-primary">Αποθήκευση μηνύματος</button>
+                  </div>
+                </form>
+              </div>
+
+              <div className="card p-6">
+                <h3 className="font-bold mb-4">Καταχωρημένα Μέλη</h3>
+                <div className="space-y-5">
+                  {members.length === 0 ? (
+                    <p className="text-sm text-slate-500">Δεν υπάρχουν μέλη ακόμη.</p>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2">Διοικητικό Συμβούλιο</p>
+                      <div className="space-y-2">
+                        {boardMembers.length === 0 ? (
+                          <p className="text-sm text-slate-500">Δεν έχουν καταχωρηθεί μέλη διοίκησης.</p>
+                        ) : (
+                          boardMembers.map((member) => (
+                            <div key={member.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+                              <div>
+                                <p className="font-semibold text-slate-800">{member.name}</p>
+                                <p className="text-sm text-slate-600">{member.role} • {member.phone}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => editMember(member)} className="btn-secondary text-xs px-3 py-1.5">Επεξεργασία</button>
+                                <button type="button" onClick={() => deleteMember(member.id)} className="btn-secondary text-xs px-3 py-1.5 text-red-600">Διαγραφή</button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Members (applications / accepted) ────────────────────────────────────────── */}
+          {active === 'Μέλη' && (
+            <div className="space-y-6">
+              <div className="card p-6">
+                <h3 className="font-bold mb-4">Αιτήσεις Εγγραφής (Εκκρεμείς)</h3>
+                {pendingApplications.length === 0 && <div className="text-sm text-slate-500">Δεν υπάρχουν εκκρεμείς αιτήσεις.</div>}
+                <div className="space-y-2">
+                  {pendingApplications.map(app => (
+                    <div key={app.id} className="card overflow-hidden">
+                      <button type="button" onClick={() => openApplicationDetail(app, false)} className="w-full text-left p-4 hover:bg-slate-50 transition-colors">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-800 text-base">{app.name}</p>
+                            <p className="text-sm text-slate-600">{app.email} • {app.phone}</p>
+                            <p className="text-xs text-slate-500 mt-1">Ημερομηνία: {new Date(app.created_at).toLocaleDateString('el-GR')}</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${isMembershipExpired(app) ? 'bg-orange-100 text-orange-800' : 'bg-amber-100 text-amber-800'}`}>
+                              {isMembershipExpired(app) ? 'Λήξη συνδρομής' : 'Εκκρεμής'}
+                            </span>
+                            {app.membership_type && (
+                              <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-2.5 py-1 text-xs font-medium">{app.membership_type}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 p-3">
+                          <p className="text-xs uppercase tracking-[0.12em] text-slate-500 mb-1">Σχέδιο κατάθεσης</p>
+                          <p className="text-sm text-slate-700">{app.payment_reference || '—'}</p>
+                        </div>
+                      </button>
+                      <div className="border-t border-slate-200 p-3 flex justify-end">
+                        <button onClick={async () => {
+                          confirmAction('Αποδοχή Μέλους', 'Θέλετε να αποδεχτείτε αυτό το μέλος;', async () => {
+                            const { error } = await supabase.from('membership_applications').update({ status: 'accepted' }).eq('id', app.id);
+                            if (error) throw error;
+                            await fetchAll();
+                            showStatus('Μέλος αποδεκτό και προστέθηκε στη λίστα.', 'success');
+                          });
+                        }} className="btn-secondary text-sm">Αποδοχή</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {selectedApplication && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/55 backdrop-blur-sm p-4">
+                  <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                    <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-sm">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Αίτηση μέλους</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{selectedApplication.name}</h3>
+                      </div>
+                      <button type="button" onClick={() => setSelectedApplication(null)} className="btn-secondary text-sm">Κλείσιμο</button>
+                    </div>
+
+                    <div className="p-6">
+                      <form onSubmit={applicationReadOnly ? undefined : saveApplicationChanges} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium">Ονοματεπώνυμο</label>
+                          <input className="input mt-1" value={applicationForm.name} onChange={e => handleApplicationFieldChange('name', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Email</label>
+                          <input type="email" className="input mt-1" value={applicationForm.email} onChange={e => handleApplicationFieldChange('email', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Όνομα πατρός</label>
+                          <input className="input mt-1" value={applicationForm.father_name} onChange={e => handleApplicationFieldChange('father_name', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Όνομα μητρός</label>
+                          <input className="input mt-1" value={applicationForm.mother_name} onChange={e => handleApplicationFieldChange('mother_name', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Ημερομηνία γέννησης</label>
+                          <input type="date" className="input mt-1" value={applicationForm.birth_date} onChange={e => handleApplicationFieldChange('birth_date', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Αριθμός Δελτίου Ταυτότητας</label>
+                          <input className="input mt-1" value={applicationForm.id_number} onChange={e => handleApplicationFieldChange('id_number', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Τηλέφωνο</label>
+                          <input className="input mt-1" value={applicationForm.phone} onChange={e => handleApplicationFieldChange('phone', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Ιδιότητα</label>
+                          <select className="input mt-1" value={applicationForm.membership_type} onChange={e => handleApplicationFieldChange('membership_type', e.target.value)} disabled={applicationReadOnly}>
+                            <option value="Τακτικό Μέλος">Τακτικό Μέλος</option>
+                            <option value="Μέλος">Μέλος</option>
+                          </select>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="text-sm font-medium">Διεύθυνση</label>
+                          <input className="input mt-1" value={applicationForm.address} onChange={e => handleApplicationFieldChange('address', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Τ.Κ.</label>
+                          <input className="input mt-1" value={applicationForm.postal_code} onChange={e => handleApplicationFieldChange('postal_code', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Περιοχή</label>
+                          <input className="input mt-1" value={applicationForm.area} onChange={e => handleApplicationFieldChange('area', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Σχέδιο κατάθεσης</label>
+                          <input className="input mt-1" value={applicationForm.payment_reference} onChange={e => handleApplicationFieldChange('payment_reference', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Κατάσταση</label>
+                          <select className="input mt-1" value={applicationForm.status} onChange={e => handleApplicationFieldChange('status', e.target.value)} disabled={applicationReadOnly}>
+                            <option value="pending">Εκκρεμής</option>
+                            <option value="accepted">Εγκεκριμένη</option>
+                            <option value="rejected">Απορρίφθηκε</option>
+                          </select>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="text-sm font-medium">Σημείωση διαχειριστή</label>
+                          <textarea className="input mt-1 min-h-[100px]" value={applicationForm.admin_note} onChange={e => handleApplicationFieldChange('admin_note', e.target.value)} readOnly={applicationReadOnly} disabled={applicationReadOnly} />
+                        </div>
+
+                        <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => openApplicationFile(selectedApplication)} className="btn-secondary text-sm">Προβολή αρχείου</button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                confirmAction(
+                                  'Επαναφορά σε αναμονή',
+                                  'Θέλετε να επιστρέψετε αυτό το μέλος ξανά στη λίστα αναμονής;',
+                                  async () => {
+                                    const { error } = await supabase.from('membership_applications').update({ status: 'pending' }).eq('id', selectedApplication.id);
+                                    if (error) throw error;
+                                    setSelectedApplication(null);
+                                    await fetchAll();
+                                    showStatus('Το μέλος μετακινήθηκε ξανά στην αναμονή.', 'success');
+                                  }
+                                );
+                              }}
+                              className="btn-secondary text-sm border-amber-200 text-amber-700 hover:bg-amber-50"
+                            >
+                              Τοποθέτηση σε λίστα αναμονής
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                confirmAction(
+                                  'Διαγραφή Αίτησης',
+                                  'Θέλετε να διαγράψετε οριστικά αυτή την αίτηση από τη βάση δεδομένων;',
+                                  async () => {
+                                    const { error } = await supabase.from('membership_applications').delete().eq('id', selectedApplication.id);
+                                    if (error) throw error;
+                                    setSelectedApplication(null);
+                                    await fetchAll();
+                                    showStatus('Η αίτηση διαγράφηκε από τη βάση δεδομένων.', 'success');
+                                  }
+                                );
+                              }}
+                              className="btn-secondary text-sm border-red-200 text-red-600 hover:bg-red-50"
+                            >
+                              Διαγραφή
+                            </button>
+                          </div>
+                          {!applicationReadOnly && <button type="submit" className="btn-primary text-sm">Αποθήκευση αλλαγών</button>}
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="card p-6">
+                <h3 className="font-bold mb-4">Εγκεκριμένα Μέλη</h3>
+                {acceptedMembers.length === 0 && <div className="text-sm text-slate-500">Δεν υπάρχουν εγκεκριμένα μέλη.</div>}
+                <div className="space-y-2">
+                  {acceptedMembers.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => openApplicationDetail(m, true)}
+                      className="w-full text-left rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-slate-800">{m.name}</p>
+                          <p className="text-sm text-slate-600">{m.membership_type || 'Μέλος'} • {m.phone}</p>
+                        </div>
+                        <div className="text-sm text-slate-500">Εγγεγραμμένο: {new Date(m.created_at).toLocaleDateString('el-GR')}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ─── Settings ────────────────────────────────────────── */}
-          {active === 'Settings' && (
+          {active === 'Ρυθμίσεις' && (
             <div className="space-y-6">
               <div className="card p-6">
                 <h3 className="font-bold mb-4">Ρυθμίσεις Ιστότοπου</h3>
                 <form onSubmit={saveSettings}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Object.keys(settings).map(key => (
-                      <div key={key}>
-                        <label className="text-xs font-medium capitalize">{key.replace(/_/g, ' ')}</label>
-                        <input
-                          className="input"
-                          value={settings[key] || ''}
-                          onChange={e => setSettings({...settings, [key]: e.target.value})}
-                        />
-                      </div>
-                    ))}
+                    {Object.keys(settings)
+                      .filter(key => !['president_name', 'president_title', 'president_image_url', 'president_message'].includes(key))
+                      .map(key => (
+                        <div key={key}>
+                          <label className="text-xs font-medium capitalize">{key.replace(/_/g, ' ')}</label>
+                          <input
+                            className="input"
+                            value={settings[key] || ''}
+                            onChange={e => setSettings({...settings, [key]: e.target.value})}
+                          />
+                        </div>
+                      ))}
                   </div>
                   <button type="submit" className="btn-primary mt-4">Αποθήκευση</button>
                 </form>

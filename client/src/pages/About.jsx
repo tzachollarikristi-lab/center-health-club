@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 
 // ─── Inline SVG Icons ─────────────────────────────────────────────
 const IconTarget = ({ className }) => (
@@ -71,6 +72,40 @@ const About = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadMembers = async () => {
+      const { data, error } = await supabase
+        .from('club_members')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (!ignore && !error) {
+        setMembers(data || []);
+      }
+    };
+
+    loadMembers();
+    return () => { ignore = true; };
+  }, []);
+
+  const roleStyles = {
+    Πρόεδρος: 'bg-emerald-100 text-emerald-700',
+    Αντιπρόεδρος: 'bg-cyan-100 text-cyan-700',
+    Γραμματέας: 'bg-violet-100 text-violet-700',
+    Ταμίας: 'bg-amber-100 text-amber-700',
+    Μέλος: 'bg-slate-100 text-slate-700',
+    'Τακτικό Μέλος': 'bg-slate-100 text-slate-700',
+  };
+
+  const boardRoles = ['Πρόεδρος', 'Αντιπρόεδρος', 'Γραμματέας', 'Ταμίας', 'Μέλος'];
+  const boardMembers = members.filter(member => boardRoles.includes(member.role || ''));
+  const regularMembers = members.filter(member => !boardRoles.includes(member.role || '') && member.role !== '');
+
   return (
     <div className="container-padded py-10 md:py-16">
       {/* ─── Header ─────────────────────────────────────────────────── */}
@@ -94,20 +129,20 @@ const About = () => {
             Αποστολή μας
           </h2>
           <p className="mt-3 text-slate-600 leading-relaxed">
-            Να προάγουμε την υγεία και την ευημερία της κοινότητας μέσω της ενημέρωσης, της πρόληψης και της υποστήριξης των πολιτών.
+            Να προάγουμε την υγεία και την ευημερία της κοινότητας μέσω της ενημέρωσης, της πρόληψης, της κοινωνικής στήριξης και της ενεργής συμμετοχής των πολιτών.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
             <li className="flex items-start gap-2">
               <IconCheck className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
-              <span>Προσβασιμότητα στις υπηρεσίες υγείας</span>
+              <span>Διασφάλιση πρόσβασης σε ποιοτικές υπηρεσίες υγείας</span>
             </li>
             <li className="flex items-start gap-2">
               <IconCheck className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
-              <span>Ευαισθητοποίηση και εκπαίδευση</span>
+              <span>Ενημέρωση, πρόληψη και ευαισθητοποίηση για την κοινότητα</span>
             </li>
             <li className="flex items-start gap-2">
               <IconCheck className="h-4 w-4 text-brand-500 shrink-0 mt-0.5" />
-              <span>Συνεργασία με φορείς και την τοπική κοινωνία</span>
+              <span>Συνεργασία με φορείς, επαγγελματίες και κατοίκους</span>
             </li>
           </ul>
         </motion.div>
@@ -120,35 +155,112 @@ const About = () => {
         >
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <IconEye className="h-6 w-6 text-cyan-600" />
-            Όραμα 2031
+            Το Όραμά μας
           </h2>
           <p className="mt-3 text-slate-600 leading-relaxed">
-            Μέχρι το 2031, ο Σύλλογός μας θα έχει γίνει το κέντρο αναφοράς για την υγεία στην περιοχή, προσφέροντας:
+            Το όραμα του Συλλόγου «ΕΛΠΙΔΑ ΖΩΗΣ» είναι μια Δυτική Γορτυνία που δεν θα αισθάνεται ξεχασμένη και απομονωμένη, αλλά θα έχει ασφάλεια, αξιοπρέπεια, προοπτική και μέλλον.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
             <li className="flex items-start gap-2">
               <IconSparkle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Μια πλήρως ψηφιακή πλατφόρμα ενημέρωσης</span>
+              <span>Σύγχρονο, λειτουργικό και ισχυρό Κέντρο Υγείας για την περιοχή</span>
             </li>
             <li className="flex items-start gap-2">
               <IconSparkle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Δίκτυο συνεργαζόμενων ιατρών και εθελοντών</span>
+              <span>Ανάπτυξη μιας ενωμένης, ενεργής και συνεργατικής κοινότητας</span>
             </li>
             <li className="flex items-start gap-2">
               <IconSparkle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Ετήσιες εκδηλώσεις πρόληψης και ευαισθητοποίησης</span>
+              <span>Εκμετάλλευση του φυσικού, ιστορικού και παραγωγικού πλούτου της περιοχής</span>
             </li>
             <li className="flex items-start gap-2">
               <IconSparkle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Υποστήριξη για άτομα με χρόνιες παθήσεις</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <IconSparkle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Συνεργασία με σχολεία και τοπικούς φορείς</span>
+              <span>Μια περιοχή όπου αξίζει να ζει, να δημιουργεί, να επιστρέφει και να μεγαλώνει</span>
             </li>
           </ul>
         </motion.div>
       </div>
+
+      {/* ─── Team ─────────────────────────────────────────────────── */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeUp}
+        className="mb-12"
+      >
+        <div className="mb-8 text-center">
+          <h2 className="text-xl font-bold text-slate-900">το διοικητικο συμβουλειο</h2>
+          <p className="text-sm text-slate-500 mt-1">Άνθρωποι που δουλεύουν για την υγεία και την κοινότητα</p>
+        </div>
+
+        {members.length > 0 ? (
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Διοικητικό Συμβούλιο</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {boardMembers.map((member) => (
+                  <div key={member.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                      {member.name?.charAt(0)?.toUpperCase() || 'A'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-semibold text-slate-800 truncate">{member.name}</h4>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${roleStyles[member.role] || 'bg-slate-100 text-slate-700'}`}>
+                          {member.role}
+                        </span>
+                      </div>
+                    </div>
+                    <a href={`tel:${member.phone}`} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5 text-slate-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75a18.3 18.3 0 0015 15l3-3a2.25 2.25 0 00-.564-3.515l-2.25-1.125a2.25 2.25 0 00-2.44.36l-1.125 1.125a12.45 12.45 0 01-6.375-6.374l1.125-1.125a2.25 2.25 0 00.36-2.44L9.565 3.314A2.25 2.25 0 006.05 2.75L2.25 6.75z" />
+                      </svg>
+                      {member.phone}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Τακτικά Μέλη</h3>
+              {regularMembers.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {regularMembers.map((member) => (
+                    <div key={member.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                        {member.name?.charAt(0)?.toUpperCase() || 'A'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-semibold text-slate-800 truncate">{member.name}</h4>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${roleStyles[member.role] || 'bg-slate-100 text-slate-700'}`}>
+                            {member.role || 'Μέλος'}
+                          </span>
+                        </div>
+                      </div>
+                      <a href={`tel:${member.phone}`} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5 text-slate-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75a18.3 18.3 0 0015 15l3-3a2.25 2.25 0 00-.564-3.515l-2.25-1.125a2.25 2.25 0 00-2.44.36l-1.125 1.125a12.45 12.45 0 01-6.375-6.374l1.125-1.125a2.25 2.25 0 00.36-2.44L9.565 3.314A2.25 2.25 0 006.05 2.75L2.25 6.75z" />
+                        </svg>
+                        {member.phone}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="card p-4 text-center text-slate-500">
+                  Δεν έχουν προστεθεί ακόμη τακτικά μέλη.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="card p-4 text-center text-slate-500">
+            Δεν έχουν προστεθεί ακόμη μέλη της διοίκησης.
+          </div>
+        )}
+      </motion.div>
 
       {/* ─── Core Values ────────────────────────────────────────────── */}
       <motion.div

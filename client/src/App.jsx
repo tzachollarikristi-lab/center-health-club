@@ -8,6 +8,9 @@ import Gallery from './pages/Gallery';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Donate from './pages/Donate';
+import PresidentMessage from './pages/PresidentMessage';
+import Join from './pages/Join';
+import MemberStatus from './pages/MemberStatus';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 import Page404 from './pages/Page404';
@@ -67,6 +70,10 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/donate" element={<Donate />} />
+              <Route path="/president-message" element={<PresidentMessage />} />
+              <Route path="/join" element={<Join />} />
+              <Route path="/member-login" element={<Join mode="login" />} />
+              <Route path="/member-status" element={<MemberStatus />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="*" element={<Page404 />} />

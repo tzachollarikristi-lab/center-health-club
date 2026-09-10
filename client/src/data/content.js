@@ -72,11 +72,13 @@ export const settings = {
   facebook_url: 'https://www.facebook.com',
   map_link: 'https://www.google.com/maps/search/?api=1&query=%CE%9A%CE%AD%CE%BD%CF%84%CF%81%CE%BF+%CE%A5%CE%B3%CE%B5%CE%AF%CE%B1%CF%82+%CE%A4%CF%81%CE%BF%CF%80%CE%B1%CE%B9%CF%89%CE%BD+22008',
   footer_text: 'Ενημερώσεις και έγγραφα για την τοπική κοινότητα, όλα σε μία διαισθητική και επαγγελματική πλατφόρμα.',
-  brand_color: '#2563eb'
-  ,
+  brand_color: '#2563eb',
   show_map_home: 'true',
-  show_map_contact: 'true'
-  ,
+  show_map_contact: 'true',
+  president_name: 'Ο Πρόεδρος του Συλλόγου',
+  president_title: 'Πρόεδρος',
+  president_image_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
+  president_message: 'Η υγεία είναι θεμέλιο της κοινωνίας μας. Στόχος μας είναι να δημιουργούμε χώρο ασφαλή, ανθρώπινο και ανοιχτό σε όλους, με γνώση, στήριξη και κοινή δράση.',
   donation_iban: '',
   donation_account_name: '',
   donation_instructions: '',
