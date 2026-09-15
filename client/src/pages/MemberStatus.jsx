@@ -28,28 +28,22 @@ export default function MemberStatus() {
 
       try {
         const parsed = JSON.parse(raw);
-        const lookup = parsed?.id_number || parsed?.phone || parsed?.name;
+        const idNumber = parsed?.id_number || '';
+        const phone = parsed?.phone || '';
 
-        if (!lookup) {
+        if (!idNumber || !phone) {
           navigate('/join');
           return;
         }
 
-        const { data, error } = await supabase
-          .from('membership_applications')
-          .select('*')
-          .or(
-            `id_number.eq.${parsed.id_number || ''},phone.eq.${parsed.phone || ''},name.eq.${parsed.name || ''}`
-          );
+        const { data, error } = await supabase.rpc('lookup_membership', {
+          p_id_number: idNumber,
+          p_phone: phone,
+        });
 
         if (error) throw error;
 
-        const applicationMatch = (data || []).find((application) => {
-          const sameId = parsed.id_number && application.id_number && String(application.id_number).trim().toLowerCase() === String(parsed.id_number).trim().toLowerCase();
-          const samePhone = parsed.phone && application.phone && String(application.phone).trim().toLowerCase() === String(parsed.phone).trim().toLowerCase();
-          const sameName = parsed.name && application.name && String(application.name).trim().toLowerCase() === String(parsed.name).trim().toLowerCase();
-          return sameId || samePhone || sameName;
-        });
+        const applicationMatch = (data && data[0]) || null;
 
         if (applicationMatch) {
           const hasExpired = applicationMatch.status === 'accepted' && applicationMatch.created_at && Date.now() > new Date(applicationMatch.created_at).getTime() + 31536000000;
@@ -105,9 +99,9 @@ export default function MemberStatus() {
   const iban = member.iban || settings?.donation_iban || 'Δεν έχει οριστεί IBAN';
 
   return (
-    <div className="container-padded py-14">
+    <div className="container-padded reveal py-14">
       <div className="mx-auto max-w-2xl">
-        <div className={`rounded-[28px] border p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] ${isPending ? 'border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50' : 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
+        <div className={`reveal rounded-[28px] border p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] ${isPending ? 'border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50' : 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
           <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
               <div className={`flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-black text-white shadow-lg ${isPending ? 'bg-amber-500 shadow-amber-200' : 'bg-emerald-600 shadow-emerald-200'}`}>

@@ -250,14 +250,16 @@ export default function Join({ mode = 'join' }) {
     setExistingMemberForm(next);
   }
 
-  async function uploadSignature(canvas) {
+   async function uploadSignature(canvas) {
     if (!canvas) return '';
+    if (!supabase) return '';
     const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
-    const fileName = `members/signatures/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-    const { error } = await supabase.storage.from('media').upload(fileName, blob, { cacheControl: '3600', upsert: false });
+    const fileName = `pending/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+    const { error } = await supabase.storage
+      .from('member-signatures')
+      .upload(fileName, blob, { cacheControl: '3600', upsert: false });
     if (error) throw error;
-    const { data: urlData } = supabase.storage.from('media').getPublicUrl(fileName);
-    return urlData.publicUrl;
+    return fileName;
   }
 
   function normalizeString(value) {
@@ -278,42 +280,26 @@ export default function Join({ mode = 'join' }) {
     );
   }
 
-  async function checkExistingMembershipMatch() {
-    const name = form.name.trim();
-    const phone = form.phone.trim();
+    async function checkExistingMembershipMatch() {
+    if (!supabase) return null;
+
     const idNumber = form.id_number.trim();
-    const email = form.email.trim();
+    const phone = form.phone.trim();
+    if (!idNumber || !phone) return null;
 
-    if (!name || !phone || !idNumber) return null;
-
-    const [membersResult, appsResult] = await Promise.all([
-      supabase.from('club_members').select('id, name, phone, created_at, role'),
-      supabase.from('membership_applications').select('id, name, phone, id_number, email, status, created_at')
-    ]);
-
-    if (membersResult.error) throw membersResult.error;
-    if (appsResult.error) throw appsResult.error;
-
-    const allMembers = membersResult.data || [];
-    const allApplications = appsResult.data || [];
-
-    const memberMatch = allMembers.find(member => isSamePerson({ name, phone, id_number: idNumber }, { name: member.name, phone: member.phone, id_number: '' }));
-    if (memberMatch) {
-      return { kind: 'member', record: memberMatch };
-    }
-
-    const pendingMatch = allApplications.find(app => {
-      const sameBase = isSamePerson({ name, phone, id_number: idNumber }, { name: app.name, phone: app.phone, id_number: app.id_number || '' });
-      const sameEmail = normalizeString(app.email) === normalizeString(email);
-      return sameBase || sameEmail;
+    const { data, error } = await supabase.rpc('lookup_membership', {
+      p_id_number: idNumber,
+      p_phone: phone,
     });
+    if (error) throw error;
+    if (!data || data.length === 0) return null;
 
-    if (pendingMatch) {
-      const expired = isMembershipExpired(pendingMatch);
-      return { kind: pendingMatch.status === 'accepted' && !expired ? 'member' : 'pending', record: pendingMatch };
-    }
-
-    return null;
+    const record = data[0];
+    const expired = isMembershipExpired(record);
+    return {
+      kind: record.status === 'accepted' && !expired ? 'member' : 'pending',
+      record,
+    };
   }
 
   function validateForm() {
@@ -413,25 +399,26 @@ export default function Join({ mode = 'join' }) {
       return;
     }
 
+    if (!supabase) {
+      setExistingMemberMessage('Το σύστημα εγγραφών δεν είναι διαθέσιμο αυτή τη στιγμή.');
+      return;
+    }
+
     try {
       setExistingMemberSubmitting(true);
-      const { data, error } = await supabase.from('membership_applications').select('*');
+      const { data, error } = await supabase.rpc('lookup_membership', {
+        p_id_number: id_number.trim(),
+        p_phone: phone,
+      });
       if (error) throw error;
 
-      const fullName = `${name.trim()} ${surname.trim()}`;
-      const match = (data || []).find((application) => {
-        const sameName = normalizeString(application.name) === normalizeString(fullName);
-        const sameId = normalizeString(application.id_number) === normalizeString(id_number);
-        const samePhone = normalizeString(application.phone) === normalizeString(phone);
-        const sameBirthDate = !birth_date || !application.birth_date || normalizeString(application.birth_date) === normalizeString(birth_date);
-        return sameName && sameId && samePhone && sameBirthDate;
-      });
-
-      if (!match) {
+      if (!data || data.length === 0) {
         setExistingMemberMessage('Δεν βρέθηκε ενεργό μέλος ή αίτηση σε εκκρεμότητα με αυτά τα στοιχεία. Αν πιστεύετε ότι υπάρχει σφάλμα, επικοινωνήστε μαζί μας.');
         return;
       }
 
+      const match = data[0];
+      const fullName = `${name.trim()} ${surname.trim()}`;
       const isExpired = match.status === 'accepted' && match.created_at && Date.now() > new Date(match.created_at).getTime() + 31536000000;
 
       if (match.status === 'accepted' && !isExpired) {

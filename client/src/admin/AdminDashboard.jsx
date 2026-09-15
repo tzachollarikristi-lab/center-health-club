@@ -324,13 +324,14 @@ export default function AdminDashboard() {
         supabase.from('club_members').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('membership_applications').select('*').order('created_at', { ascending: false }),
         supabase.from('site_settings').select('key, value'),
-      ]);      if (ann.error) throw ann.error;
-      if (cat.error) throw cat.error;
-      if (doc.error) throw doc.error;
-      if (gal.error) throw gal.error;
-      if (msg.error) throw msg.error;
-      if (mem.error) throw mem.error;
-      if (set.error) throw set.error;
+      ]);    if (ann.error) throw ann.error;
+if (cat.error) throw cat.error;
+if (doc.error) throw doc.error;
+if (gal.error) throw gal.error;
+if (msg.error) throw msg.error;
+if (mem.error) throw mem.error;
+if (apps.error) throw apps.error;
+if (set.error) throw set.error;
       setAnnouncements(ann.data || []);
       setCategories(cat.data || []);
       setDocuments(doc.data || []);
@@ -403,6 +404,18 @@ export default function AdminDashboard() {
     setAnnounceForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
   }
 
+  function handleNext() {
+  if (step === 0 && !announceForm.title.trim()) {
+    showToast('Ο τίτλος απαιτείται.', 'error');
+    return;
+  }
+  if (step === 1 && !announceForm.description.trim()) {
+    showToast('Το κείμενο απαιτείται.', 'error');
+    return;
+  }
+  setStep(step + 1);
+}
+
   // ─── Announcement: Save ──────────────────────────────────────
   async function saveAnnouncement(e) {
     e.preventDefault();
@@ -410,11 +423,15 @@ export default function AdminDashboard() {
     if (!announceForm.title.trim()) errors.title = 'Ο τίτλος απαιτείται.';
     if (!announceForm.description.trim()) errors.description = 'Το κείμενο απαιτείται.';
     if (Object.keys(errors).length) {
-      setAnnounceErrors(errors);
-      if (errors.title) setStep(0);
-      if (errors.description) setStep(1);
-      return;
-    }
+  if (errors.title) {
+    showToast(errors.title, 'error');
+    setStep(0);
+  } else if (errors.description) {
+    showToast(errors.description, 'error');
+    setStep(1);
+  }
+  return;
+}
     const payload = {
       title: announceForm.title.trim(),
       summary: announceForm.summary || '',
@@ -746,7 +763,18 @@ export default function AdminDashboard() {
     setApplicationForm(next);
   }
 
-  function openApplicationFile(application) {
+   async function openApplicationFile(application) {
+    let signatureUrl = application?.signature_url || '';
+
+    // If the signature is stored as a private bucket path (not a full URL),
+    // fetch a short-lived signed URL. Only admins can generate these.
+    if (signatureUrl && !signatureUrl.startsWith('http')) {
+      const { data, error } = await supabase.storage
+        .from('member-signatures')
+        .createSignedUrl(signatureUrl, 300);
+      signatureUrl = (!error && data?.signedUrl) ? data.signedUrl : '';
+    }
+
     const printWindow = window.open('', '_blank', 'width=1000,height=1200');
     if (!printWindow) return;
 
@@ -771,8 +799,8 @@ export default function AdminDashboard() {
       </tr>
     `).join('');
 
-    const signatureMarkup = application?.signature_url
-      ? `<img src="${application.signature_url}" alt="Υπογραφή" style="max-width: 260px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto; filter: contrast(1.05);" />`
+    const signatureMarkup = signatureUrl
+      ? `<img src="${signatureUrl}" alt="Υπογραφή" style="max-width: 260px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto; filter: contrast(1.05);" />`
       : `<div style="height: 78px; display: flex; align-items: end; justify-content: center; font-size: 28px; color: #0f172a;">__________________</div>`;
 
     printWindow.document.write(`
@@ -1213,7 +1241,7 @@ export default function AdminDashboard() {
                   <div className="flex justify-between mt-4">
                     <div className="flex gap-2">
                       {step > 0 && <button type="button" onClick={() => setStep(step-1)} className="btn-secondary text-sm">Πίσω</button>}
-                      {step < 3 && <button type="button" onClick={() => setStep(step+1)} className="btn-primary text-sm">Επόμενο</button>}
+                      {step < 3 && <button type="button" onClick={handleNext} className="btn-primary text-sm">Επόμενο</button>}
                     </div>
                     {step === 3 && (
                       <button type="submit" className="btn-primary text-sm">
