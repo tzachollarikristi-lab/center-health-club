@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor,
+  DndContext, closestCenter, MouseSensor, TouchSensor,
   useSensor, useSensors, DragOverlay,
 } from '@dnd-kit/core';
 import {
@@ -37,7 +37,7 @@ const fmt = (d) => {
   return dt.toLocaleDateString('el-GR', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-// ─── Sortable Grid Item — whole card is draggable ───
+// ─── Sortable Grid Item (bulletproof overlay approach) ───
 function SortableItem({ item }) {
   const {
     attributes, listeners, setNodeRef,
@@ -47,37 +47,53 @@ function SortableItem({ item }) {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       style={{
         transform: CSS.Transform.toString(transform),
         transition: isDragging ? undefined : (transition || 'transform 250ms cubic-bezier(0.16, 1, 0.3, 1)'),
         opacity: isDragging ? 0.25 : 1,
         zIndex: isDragging ? 50 : 1,
-        touchAction: 'none',
-        WebkitUserSelect: 'none',
-        userSelect: 'none',
-        WebkitTouchCallout: 'none',
-        cursor: 'grab',
+        position: 'relative',
       }}
-      className="relative group active:cursor-grabbing"
     >
       <div className="ios-shake relative overflow-hidden rounded-2xl md:rounded-3xl border border-slate-200/60 bg-white shadow-sm">
-        <div className="aspect-square relative overflow-hidden">
+
+        {/* The visual card */}
+        <div className="aspect-square relative overflow-hidden bg-slate-100">
           <img
             src={item.image_url}
             alt={item.title}
-            className="w-full h-full object-cover pointer-events-none select-none"
+            className="w-full h-full object-cover"
             draggable={false}
+            style={{
+              pointerEvents: 'none',
+              WebkitUserDrag: 'none',
+              WebkitTouchCallout: 'none',
+              userSelect: 'none',
+            }}
           />
-          {/* iOS-style grip indicator (visual only) */}
-          <div className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 backdrop-blur-sm shadow-sm ring-1 ring-slate-900/5">
+          <div className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 backdrop-blur-sm shadow-sm ring-1 ring-slate-900/5 pointer-events-none">
             <IconGrip className="h-3.5 w-3.5 text-slate-500" />
           </div>
         </div>
         <div className="px-2.5 py-2 bg-white">
-          <p className="text-[11px] md:text-xs font-semibold text-slate-800 truncate">{item.title}</p>
+          <p className="text-[11px] md:text-xs font-semibold text-slate-800 truncate pointer-events-none">{item.title}</p>
         </div>
+
+        {/* ─── INVISIBLE OVERLAY: catches ALL touch events ─── */}
+        {/* iOS never sees the image so it can't trigger "Save Image" */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute inset-0 z-20 cursor-grab active:cursor-grabbing"
+          style={{
+            touchAction: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+          aria-label="Σύρετε για αλλαγή σειράς"
+        />
       </div>
     </div>
   );
@@ -196,13 +212,13 @@ export default function Gallery() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Hold-to-drag: 120ms of contact starts a drag. Before that, taps stay taps.
+  // Sensors: MouseSensor for desktop, TouchSensor for mobile
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { delay: 120, tolerance: 6 },
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 120, tolerance: 6 },
+      activationConstraint: { delay: 180, tolerance: 5 },
     }),
   );
 
@@ -451,7 +467,7 @@ export default function Gallery() {
         </motion.div>
       )}
 
-      {/* EDIT MODE BANNER — compact */}
+      {/* EDIT MODE BANNER */}
       {editMode && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -463,10 +479,10 @@ export default function Gallery() {
             transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
             className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white shadow-md shadow-brand-500/25"
           >
-            <IconHand className="h-4 w-4 md:h-4.5 md:w-4.5" />
+            <IconHand className="h-4 w-4" />
           </motion.div>
           <p className="text-[11px] md:text-xs text-slate-700 leading-snug min-w-0">
-            <span className="font-semibold text-slate-900">Κρατήστε πατημένη</span> μια φωτογραφία και{' '}
+            <span className="font-semibold text-slate-900">Κρατήστε πατημένη</span> μια φωτογραφία για λίγο και{' '}
             <span className="font-semibold text-slate-900">σύρετέ την</span> στη νέα θέση.
           </p>
         </motion.div>
