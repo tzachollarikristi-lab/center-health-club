@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '../contexts/SettingsContext';
 import Loading from '../components/Loading';
+import SEO from '../components/SEO';
 
 // ─── Inline SVG Icons ─────────────────────────────────────────────
 const IconBank = ({ className }) => (
@@ -52,6 +53,8 @@ const Donate = () => {
   if (settingsLoading) return <Loading full message="Φόρτωση..." />;
 
   return (
+<SEO title="Δωρεά" description="Υποστηρίξτε τον σύλλογο με τη δωρεά σας και βοηθήστε να στηρίξουμε το Κέντρο Υγείας Τροπαίων." url="/donate" />,
+
     <div className="container-padded py-10 md:py-16">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
         <div>

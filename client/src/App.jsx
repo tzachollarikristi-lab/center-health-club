@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+
+// ─── Public pages ─────────────────────────────────
 import Home from './pages/Home';
 import Announcements from './pages/Announcements';
 import Documents from './pages/Documents';
@@ -11,58 +13,48 @@ import Donate from './pages/Donate';
 import PresidentMessage from './pages/PresidentMessage';
 import Join from './pages/Join';
 import MemberStatus from './pages/MemberStatus';
-import AdminLogin from './admin/AdminLogin';
-import AdminDashboard from './admin/AdminDashboard';
 import Page404 from './pages/Page404';
+
+// ─── Admin ────────────────────────────────────────
+import AdminLogin from './admin/AdminLogin';
+import AdminLayout from './admin-new/layout/AdminLayout';
+import Overview from './admin-new/pages/Overview';
+import AnnouncementsPage from './admin-new/pages/Announcements';
+import MessagesPage from './admin-new/pages/Messages';
+import GalleryPage from './admin-new/pages/Gallery';
+import DocumentsPage from './admin-new/pages/Documents';
+import LeadershipPage from './admin-new/pages/Leadership';
+import MembersPage from './admin-new/pages/Members';
+import SettingsPage from './admin-new/pages/Settings';
+
+// ─── Layout ───────────────────────────────────────
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Loading from './components/Loading';
 import { SettingsProvider } from './contexts/SettingsContext';
-import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const [appReady, setAppReady] = useState(false);
-  const [pageLoading, setPageLoading] = useState(false);
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    function onLoad() {
-      setTimeout(() => setAppReady(true), 300);
-    }
-    if (document.readyState === 'complete') {
-      setTimeout(() => setAppReady(true), 300);
-    } else {
-      window.addEventListener('load', onLoad);
-      return () => window.removeEventListener('load', onLoad);
-    }
-  }, []);
-
-  useEffect(() => {
-    setPageLoading(true);
-    const timer = window.setTimeout(() => setPageLoading(false), 300);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    return () => window.clearTimeout(timer);
   }, [location.pathname]);
-
-  if (!appReady) {
-    return <Loading full message="Προετοιμασία της εμπειρίας σας..." />;
-  }
 
   return (
     <SettingsProvider>
       <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-white to-cyan-50/30">
-        {pageLoading && <Loading message="Φόρτωση..." />}
         <Navbar />
         <AnimatePresence mode="wait">
           <motion.main
             key={location.pathname}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             className="flex-1"
           >
             <Routes>
+              {/* ═══ Public routes ═══ */}
               <Route path="/" element={<Home />} />
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/documents" element={<Documents />} />
@@ -74,13 +66,28 @@ function App() {
               <Route path="/join" element={<Join />} />
               <Route path="/member-login" element={<Join mode="login" />} />
               <Route path="/member-status" element={<MemberStatus />} />
+
+              {/* ═══ Admin login ═══ */}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+
+              {/* ═══ Admin panel — nested routes ═══ */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Overview />} />
+                <Route path="announcements" element={<AnnouncementsPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="gallery" element={<GalleryPage />} />
+                <Route path="documents" element={<DocumentsPage />} />
+                <Route path="leadership" element={<LeadershipPage />} />
+                <Route path="members" element={<MembersPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+
+              {/* ═══ 404 ═══ */}
               <Route path="*" element={<Page404 />} />
             </Routes>
           </motion.main>
         </AnimatePresence>
-        <Footer />
+        {!isAdminRoute && <Footer />}
       </div>
     </SettingsProvider>
   );

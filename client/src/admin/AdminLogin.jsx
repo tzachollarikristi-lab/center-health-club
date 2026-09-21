@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../components/Toast';
 import Loading from '../components/Loading';
+import SEO from '../components/SEO';
 
 // ─── Icons ──────────────────────────────────────────────────────────
 const IconLogo = ({ className }) => (
@@ -70,10 +71,11 @@ const AdminLogin = () => {
     }
 
     showToast('Σύνδεση επιτυχής!', 'success');
-    navigate('/admin/dashboard');
+    navigate('/admin');
   };
 
   return (
+    <SEO title="Σύνδεση Διαχειριστή" description="Είσοδος διαχειριστή" noIndex />,
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-brand-50/30 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/80 p-8 md:p-10">

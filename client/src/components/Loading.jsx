@@ -1,91 +1,109 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 const logo = '/logo.png';
 
-const Loading = ({ message = 'Φόρτωση...', full = false }) => {
-  const content = (
-    <div className="flex flex-col items-center justify-center gap-4 p-8">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-        className="relative"
-      >
-        <div className="h-16 w-16 rounded-full border-4 border-brand-200 border-t-brand-600 animate-spin" />
-        <img 
-          src={logo} 
-          alt="Loading" 
-          className="absolute inset-0 h-10 w-10 m-auto rounded-full object-contain bg-white p-1"
-        />
-      </motion.div>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="text-sm font-medium text-slate-600 text-center max-w-xs"
-      >
-        {message}
-      </motion.p>
-      <div className="flex items-center gap-1">
-        <motion.span
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-          className="h-2 w-2 rounded-full bg-brand-500"
-        />
-        <motion.span
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-          className="h-2 w-2 rounded-full bg-brand-500"
-        />
-        <motion.span
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-          className="h-2 w-2 rounded-full bg-brand-500"
-        />
+const Loading = ({ message = 'Φόρτωση...' }) => {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#faf8f4]">
+
+      {/* Floating background blobs — CSS keyframes, always running */}
+      <div
+        className="absolute -top-40 -left-32 h-[420px] w-[420px] rounded-full bg-brand-200/40 blur-3xl pointer-events-none"
+        style={{ animation: 'blob1 14s ease-in-out infinite' }}
+      />
+      <div
+        className="absolute -bottom-40 -right-32 h-[500px] w-[500px] rounded-full bg-cyan-200/40 blur-3xl pointer-events-none"
+        style={{ animation: 'blob2 16s ease-in-out infinite' }}
+      />
+      <div
+        className="absolute top-1/3 left-1/4 h-[280px] w-[280px] rounded-full bg-amber-100/40 blur-3xl pointer-events-none"
+        style={{ animation: 'blob3 18s ease-in-out infinite' }}
+      />
+
+      {/* Center content */}
+      <div className="relative z-10 flex flex-col items-center text-center px-6">
+
+        <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-brand-600">
+          Σύλλογος Φίλων Στήριξης
+        </p>
+
+        {/* Logo with breathing halo */}
+        <div className="relative mt-6">
+          <div
+            className="absolute inset-0 rounded-full bg-brand-400 blur-3xl"
+            style={{ animation: 'halo1 3s ease-in-out infinite' }}
+          />
+          <div
+            className="absolute inset-0 rounded-full bg-cyan-400 blur-3xl"
+            style={{ animation: 'halo2 3s ease-in-out infinite 0.5s' }}
+          />
+
+          <div
+            className="relative flex h-24 w-24 md:h-28 md:w-28 items-center justify-center rounded-[28px] bg-white shadow-[0_25px_70px_-20px_rgba(37,99,235,0.45)] ring-1 ring-slate-900/5"
+            style={{ animation: 'floatLogo 3.5s ease-in-out infinite' }}
+          >
+            <img src={logo} alt="ΕΛΠΙΔΑ ΖΩΗΣ" className="h-16 w-16 md:h-20 md:w-20 object-contain" />
+          </div>
+        </div>
+
+        {/* Brand title */}
+        <h1 className="mt-8 font-display text-2xl md:text-3xl text-slate-900 tracking-[-0.02em] leading-tight">
+          Κέντρο Υγείας
+          <br />
+          <span className="italic font-normal text-brand-600">Τροπαίων</span>
+        </h1>
+
+        <p className="club-subtitle mt-3 text-[11px] md:text-xs text-brand-500 tracking-[0.3em] font-bold">
+          ΕΛΠΙΔΑ ΖΩΗΣ
+        </p>
+
+        {/* Pulsing dots */}
+        <div className="mt-8 flex items-center gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="h-1.5 w-1.5 rounded-full bg-brand-500"
+              style={{ animation: `pulseDot 1.2s ease-in-out infinite ${i * 0.2}s` }}
+            />
+          ))}
+        </div>
+
+        <p className="mt-4 text-xs font-medium text-slate-500">{message}</p>
       </div>
+
+      {/* Keyframes — defined once, always available */}
+      <style>{`
+        @keyframes blob1 {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(40px, -30px); }
+        }
+        @keyframes blob2 {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(-50px, 40px); }
+        }
+        @keyframes blob3 {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(30px, -20px); }
+        }
+        @keyframes halo1 {
+          0%, 100% { transform: scale(1); opacity: 0.4; }
+          50% { transform: scale(1.25); opacity: 0.1; }
+        }
+        @keyframes halo2 {
+          0%, 100% { transform: scale(1); opacity: 0.25; }
+          50% { transform: scale(1.35); opacity: 0.05; }
+        }
+        @keyframes floatLogo {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes pulseDot {
+          0%, 100% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.4); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
-
-  if (full) {
-    return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-cyan-50">
-        <div className="relative w-full max-w-sm rounded-3xl border border-white/70 bg-white/80 p-10 text-center shadow-2xl backdrop-blur-xl">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <img 
-              src={logo} 
-              alt="Σύλλογος Κέντρου Υγείας" 
-              className="mx-auto h-20 w-auto rounded-2xl object-contain shadow-md" 
-            />
-            <h2 className="mt-4 text-xl font-semibold text-slate-900">Σύλλογος Κέντρου Υγείας</h2>
-            <p className="mt-2 text-sm text-slate-500">{message}</p>
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                className="h-3 w-3 rounded-full bg-brand-600"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                className="h-3 w-3 rounded-full bg-brand-500"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                className="h-3 w-3 rounded-full bg-brand-400"
-              />
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  return content;
 };
 
 export default Loading;

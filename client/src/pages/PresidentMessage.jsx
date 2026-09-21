@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import SEO from '../components/SEO';
 
 const PresidentMessage = () => {
   const { settings } = useSettings();
@@ -10,7 +11,9 @@ const PresidentMessage = () => {
   const title = settings?.president_title || 'Πρόεδρος';
 
   return (
-    <div className="container-padded py-12 md:py-16">
+    
+      <SEO title="Μήνυμα Προέδρου" description="Το μήνυμα του Προέδρου του Συλλόγου Φίλων Στήριξης Κέντρου Υγείας Τροπαίων." url="/president-message" />,
+      <div className="container-padded py-12 md:py-16">
       <div className="max-w-4xl mx-auto">
         <Link to="/" className="inline-flex items-center text-sm font-medium text-brand-700 hover:text-brand-800 mb-6">
           ← Επιστροφή στην αρχική

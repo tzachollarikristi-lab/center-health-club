@@ -18,6 +18,9 @@ function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
+  // 🔑 Hide the mobile menu button when we are on an admin page
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   useEffect(() => {
     if (open) {
       const original = document.body.style.overflow;
@@ -60,7 +63,7 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* ─── Desktop Navigation — pill container, pushed right ─── */}
+          {/* ─── Desktop Navigation ─── */}
           <nav className="hidden lg:flex items-center ml-auto">
             <div className="flex items-center gap-0.5 rounded-full bg-white/70 backdrop-blur-sm border border-slate-900/8 p-1 shadow-sm">
               {links.map((item) => (
@@ -82,59 +85,62 @@ function Navbar() {
             </div>
           </nav>
 
-          {/* ─── Mobile menu button ─────────────────────── */}
-          <button
-            type="button"
-            className="lg:hidden rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 transition-colors"
-            onClick={() => setOpen(!open)}
-            aria-label={open ? 'Κλείσιμο μενού' : 'Άνοιγμα μενού'}
-            aria-expanded={open}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {open ? (
-                <motion.svg
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M6 18L18 6M6 6l12 12" />
-                </motion.svg>
-              ) : (
-                <motion.svg
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                </motion.svg>
-              )}
-            </AnimatePresence>
-          </button>
+          {/* ─── Mobile menu button — HIDDEN ON ADMIN PAGES ─── */}
+          {!isAdminRoute && (
+            <button
+              type="button"
+              className="lg:hidden rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 transition-colors"
+              onClick={() => setOpen(!open)}
+              aria-label={open ? 'Κλείσιμο μενού' : 'Άνοιγμα μενού'}
+              aria-expanded={open}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {open ? (
+                  <motion.svg
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                  >
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </motion.svg>
+                ) : (
+                  <motion.svg
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                  >
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                  </motion.svg>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
+
         </div>
 
         {/* ─── Mobile Navigation ────────────────────── */}
         <AnimatePresence>
-          {open && (
+          {open && !isAdminRoute && (
             <motion.div
               key="mobile-menu"
               initial={{ opacity: 0, height: 0 }}

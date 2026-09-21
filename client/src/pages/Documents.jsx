@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import Loading from '../components/Loading';
 import { documents as fallbackDocuments } from '../data/content';
+import SEO from '../components/SEO';
 
 // ─── Icons ────────────────────────────────────────────────────────
 const SearchIcon = ({ className }) => (
@@ -80,7 +80,7 @@ const Documents = () => {
             .from('documents')
             .select('*')
             .order('created_at', { ascending: false });
-          if (!error && data?.length) setDocuments(data);
+          if (!error) setDocuments(data || []);
         }
       } catch (err) { console.warn(err); }
       finally { setLoading(false); }
@@ -128,11 +128,36 @@ const Documents = () => {
     return m ? m[1].toUpperCase().slice(0, 4) : 'FILE';
   };
 
-  if (loading) return <Loading full message="Φόρτωση εγγράφων..." />;
+  if (loading) {
+  return (
+    <div className="bg-[#faf8f4] min-h-screen animate-pulse">
+      <section className="container-padded pt-8 pb-8 md:pt-10 md:pb-10">
+        <div className="h-3 w-32 rounded-full bg-slate-200/60 mb-6" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="space-y-2">
+            <div className="h-8 w-40 rounded-2xl bg-slate-200/60" />
+            <div className="h-3 w-64 rounded-full bg-slate-200/50" />
+          </div>
+          <div className="h-10 w-full md:w-72 rounded-full bg-slate-200/50" />
+        </div>
+      </section>
+
+      <section className="container-padded pb-20">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-44 rounded-2xl bg-slate-200/40" />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 
   const hasFilters = Boolean(search);
 
   return (
+   <SEO title="Έγγραφα" description="Ενημερωτικά φυλλάδια, οδηγίες και επίσημα έγγραφα του συλλόγου." url="/documents" />,
+
     <div className="bg-[#faf8f4] text-slate-900 min-h-screen">
 
       {/* ══════════════════════════════════════════════════

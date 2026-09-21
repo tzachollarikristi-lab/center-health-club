@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../components/Toast';
 import Loading from '../components/Loading';
+import SEO from '../components/SEO';
 
 // ─── Icons ────────────────────────────────────────────────────────
 const ArrowLeftIcon = ({ className }) => (
@@ -144,6 +145,8 @@ const Contact = () => {
   const phoneHref = phoneDigits.startsWith('30') ? `tel:+${phoneDigits}` : `tel:+30${phoneDigits}`;
 
   return (
+      <SEO title="Επικοινωνία" description="Επικοινωνήστε μαζί μας για πληροφορίες, δράσεις ή συμμετοχή στον σύλλογο." url="/contact" />,
+
     <div className="bg-[#faf8f4] text-slate-900 min-h-screen">
 
       {/* ══════════════════════════════════════════════════

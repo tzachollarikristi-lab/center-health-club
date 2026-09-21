@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import Loading from '../components/Loading';
-import { announcements as fallbackAnnouncements, categories as fallbackCategories } from '../data/content';
+import SEO from '../components/SEO';
 
 // ─── Icons ────────────────────────────────────────────────────────
 const SearchIcon = ({ className }) => (
@@ -65,11 +64,9 @@ const stagger = {
 
 // ─── Announcements ───────────────────────────────────────────────
 const Announcements = () => {
-  const [announcements, setAnnouncements] = useState(fallbackAnnouncements);
-  const [categories, setCategories] = useState(fallbackCategories);
+  const [announcements, setAnnouncements] = useState([]);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -78,15 +75,21 @@ const Announcements = () => {
       setLoading(true);
       try {
         if (supabase) {
-          const [annRes, catRes] = await Promise.all([
-            supabase.from('announcements').select('*').order('publish_date', { ascending: false }).order('pinned', { ascending: false }),
-            supabase.from('categories').select('*').order('name'),
-          ]);
-          if (!annRes.error && annRes.data?.length) setAnnouncements(annRes.data);
-          if (!catRes.error && catRes.data?.length) setCategories(catRes.data);
+          const { data, error } = await supabase
+            .from('announcements')
+            .select('*')
+            .order('publish_date', { ascending: false });
+          if (error) {
+            console.error('[Announcements] fetch error:', error);
+          } else {
+            setAnnouncements(data || []);
+          }
         }
-      } catch (err) { console.warn(err); }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.warn(err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -103,16 +106,17 @@ const Announcements = () => {
     return dt.toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  const filtered = announcements.filter(item => {
-    const matchesSearch = item.title?.toLowerCase().includes(search.toLowerCase()) ||
-                          (item.description || '').toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  const filtered = announcements.filter((item) => {
+    const s = search.toLowerCase();
+    return (
+      item.title?.toLowerCase().includes(s) ||
+      (item.description || '').toLowerCase().includes(s)
+    );
   });
 
-  const pinned = filtered.find(a => a.pinned) || null;
-  const rest = filtered.filter(a => a !== pinned);
-  const hasFilters = Boolean(search) || selectedCategory !== 'all';
+  const pinned = filtered.find((a) => a.pinned) || null;
+  const rest = filtered.filter((a) => a !== pinned);
+  const hasFilters = Boolean(search);
 
   const openModal = (item) => {
     setSelected(item);
@@ -127,12 +131,12 @@ const Announcements = () => {
   const prevImage = (e) => {
     e.stopPropagation();
     if (!selected?.images?.length) return;
-    setCurrentImageIndex(prev => prev === 0 ? selected.images.length - 1 : prev - 1);
+    setCurrentImageIndex((prev) => (prev === 0 ? selected.images.length - 1 : prev - 1));
   };
   const nextImage = (e) => {
     e.stopPropagation();
     if (!selected?.images?.length) return;
-    setCurrentImageIndex(prev => prev === selected.images.length - 1 ? 0 : prev + 1);
+    setCurrentImageIndex((prev) => (prev === selected.images.length - 1 ? 0 : prev + 1));
   };
 
   useEffect(() => {
@@ -142,16 +146,42 @@ const Announcements = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
-  if (loading) return <Loading full message="Φόρτωση ανακοινώσεων..." />;
+  const clearFilters = () => setSearch('');
 
-  const clearFilters = () => { setSearch(''); setSelectedCategory('all'); };
+  // ─── Skeleton ────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="bg-[#faf8f4] min-h-screen">
+        <div className="container-padded pt-8 pb-8 md:pt-10 md:pb-10 animate-pulse">
+          <div className="h-3 w-32 rounded-full bg-slate-200/60 mb-6" />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div className="space-y-2">
+              <div className="h-8 w-56 rounded-2xl bg-slate-200/60" />
+              <div className="h-3 w-72 rounded-full bg-slate-200/50" />
+            </div>
+            <div className="h-10 w-full md:w-72 rounded-full bg-slate-200/50" />
+          </div>
+        </div>
+        <div className="container-padded pb-20">
+          <div className="space-y-6 animate-pulse">
+            <div className="h-72 rounded-3xl bg-slate-200/50" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-64 rounded-3xl bg-slate-200/40" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
+    
+    <SEO title="Ανακοινώσεις" description="Νέα, δράσεις και εκδηλώσεις του Συλλόγου Φίλων Στήριξης Κέντρου Υγείας Τροπαίων." url="/announcements" />,
     <div className="bg-[#faf8f4] text-slate-900 min-h-screen">
 
-      {/* ══════════════════════════════════════════════════
-          PAGE HEADER — small title + minimal search
-      ══════════════════════════════════════════════════ */}
+      {/* PAGE HEADER */}
       <section className="relative overflow-hidden border-b border-slate-900/8">
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'linear-gradient(135deg, #fdfdfc 0%, #f4f9fd 45%, #eaf0f7 100%)',
@@ -163,8 +193,6 @@ const Announcements = () => {
 
         <div className="container-padded relative z-10 pt-8 pb-8 md:pt-10 md:pb-10">
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-
-            {/* Back button */}
             <Link
               to="/"
               className="group inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors mb-6"
@@ -173,7 +201,6 @@ const Announcements = () => {
               Πίσω στην αρχική
             </Link>
 
-            {/* Title + Search row */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 md:gap-8">
               <div className="min-w-0">
                 <h1 className="font-display text-xl md:text-2xl leading-tight tracking-[-0.02em] text-slate-900">
@@ -184,7 +211,6 @@ const Announcements = () => {
                 </p>
               </div>
 
-              {/* Minimal search */}
               <div className="relative w-full md:w-72 shrink-0">
                 <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input
@@ -207,39 +233,8 @@ const Announcements = () => {
               </div>
             </div>
 
-            {/* Category chips — small, inline */}
-            <div className="mt-6 flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('all')}
-                className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
-                  selectedCategory === 'all'
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-white/70 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-white'
-                }`}
-              >
-                Όλες
-              </button>
-              {categories.map(c => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(c.name)}
-                  className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-all flex items-center gap-1 ${
-                    selectedCategory === c.name
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white/70 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-white'
-                  }`}
-                >
-                  {c.emoji && <span>{c.emoji}</span>}
-                  {c.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Results count */}
             {hasFilters && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+              <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                 <span>
                   {filtered.length} {filtered.length === 1 ? 'αποτέλεσμα' : 'αποτελέσματα'}
                 </span>
@@ -257,12 +252,9 @@ const Announcements = () => {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          CONTENT
-      ══════════════════════════════════════════════════ */}
+      {/* CONTENT */}
       <section className="pt-10 md:pt-14 pb-20 md:pb-24">
         <div className="container-padded">
-
           {filtered.length === 0 ? (
             <motion.div initial="hidden" animate="visible" variants={fadeUp} className="max-w-md mx-auto text-center py-16">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white ring-1 ring-slate-900/8">
@@ -282,7 +274,7 @@ const Announcements = () => {
                   onClick={clearFilters}
                   className="mt-6 inline-flex items-center gap-2 rounded-full bg-slate-900 pl-5 pr-2 py-1.5 text-white transition-all hover:bg-brand-600 group"
                 >
-                  <span className="text-xs font-semibold">Καθαρισμός φίλτρων</span>
+                  <span className="text-xs font-semibold">Καθαρισμός</span>
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 transition-transform group-hover:rotate-[-45deg]">
                     <XIcon className="h-3.5 w-3.5" />
                   </span>
@@ -321,10 +313,6 @@ const Announcements = () => {
                       )}
 
                       <div className={`p-5 sm:p-7 md:p-8 flex flex-col justify-center ${pinned.images?.length ? 'md:col-span-2' : ''}`}>
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                          <span className="badge badge-neutral">{pinned.category || 'Γενικό'}</span>
-                        </div>
-
                         <h2 className="font-display text-xl md:text-2xl leading-tight text-slate-900 group-hover:text-brand-700 transition-colors">
                           {pinned.title}
                         </h2>
@@ -387,10 +375,6 @@ const Announcements = () => {
                             )}
 
                             <div className={`p-5 md:p-6 flex flex-col flex-1 ${hasImage ? '' : 'min-h-[180px]'}`}>
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="badge badge-brand">{item.category || 'Γενικό'}</span>
-                              </div>
-
                               <h3 className="font-display text-base md:text-lg leading-snug text-slate-900 line-clamp-2 group-hover:text-brand-700 transition-colors">
                                 {item.title}
                               </h3>
@@ -421,9 +405,7 @@ const Announcements = () => {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          DETAIL MODAL
-      ══════════════════════════════════════════════════ */}
+      {/* DETAIL MODAL */}
       <AnimatePresence>
         {selected && (
           <motion.div
@@ -440,7 +422,7 @@ const Announcements = () => {
               exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className={`relative w-full ${selected.images?.length ? 'max-w-4xl' : 'max-w-2xl'} bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
@@ -453,15 +435,12 @@ const Announcements = () => {
 
               <div className={`flex flex-col ${selected.images?.length ? 'md:flex-row' : ''} overflow-y-auto flex-1`}>
                 <div className={`p-6 md:p-9 ${selected.images?.length ? 'md:w-1/2' : 'w-full'} flex flex-col`}>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="badge badge-neutral">{selected.category || 'Γενικό'}</span>
-                    {selected.pinned && (
-                      <span className="badge badge-gold inline-flex items-center gap-1">
-                        <StarIcon className="h-2.5 w-2.5" />
-                        Κορυφαία
-                      </span>
-                    )}
-                  </div>
+                  {selected.pinned && (
+                    <span className="inline-flex items-center gap-1 self-start mb-3 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+                      <StarIcon className="h-2.5 w-2.5" />
+                      Κορυφαία
+                    </span>
+                  )}
 
                   <h2 className="font-display text-xl md:text-2xl leading-tight text-slate-900 pr-10">
                     {selected.title}
@@ -554,11 +533,6 @@ const Announcements = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 };

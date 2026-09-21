@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import Loading from '../components/Loading';
 import { gallery as fallbackGallery } from '../data/content';
+import SEO from '../components/SEO';
 
 // ─── Icons ────────────────────────────────────────────────────────
 const SearchIcon = ({ className }) => (
@@ -66,8 +66,9 @@ const Gallery = () => {
           const { data, error } = await supabase
             .from('gallery')
             .select('*')
+            .order('sort_order', { ascending: true })
             .order('created_at', { ascending: false });
-          if (!error && data?.length) setImages(data);
+           if (!error) setImages(data || []);
         }
       } catch (err) { console.warn(err); }
       finally { setLoading(false); }
@@ -137,9 +138,38 @@ const Gallery = () => {
     });
   }, [lightboxIndex, filtered]);
 
-  if (loading) return <Loading full message="Φόρτωση gallery..." />;
+  if (loading) {
+  return (
+    <div className="bg-[#faf8f4] min-h-screen animate-pulse">
+      <section className="container-padded pt-8 pb-8 md:pt-10 md:pb-10">
+        <div className="h-3 w-32 rounded-full bg-slate-200/60 mb-6" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="space-y-2">
+            <div className="h-8 w-32 rounded-2xl bg-slate-200/60" />
+            <div className="h-3 w-72 rounded-full bg-slate-200/50" />
+          </div>
+          <div className="h-10 w-full md:w-72 rounded-full bg-slate-200/50" />
+        </div>
+      </section>
+
+      <section className="container-padded pb-20">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
+            <div
+              key={i}
+              className="break-inside-avoid mb-3 md:mb-4 rounded-2xl bg-slate-200/50"
+              style={{ height: `${180 + (i % 3) * 60}px` }}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 
   return (
+<SEO title="Γκαλερί" description="Φωτογραφίες από δράσεις, εκδηλώσεις και στιγμές του συλλόγου." url="/gallery" />,
+
     <div className="bg-[#faf8f4] text-slate-900 min-h-screen">
 
       {/* ══════════════════════════════════════════════════

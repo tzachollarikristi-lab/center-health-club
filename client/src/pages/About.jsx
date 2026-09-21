@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import SEO from '../components/SEO';
 
 // ─── Icons ────────────────────────────────────────────────────────
 const ArrowLeftIcon = ({ className }) => (
@@ -159,6 +160,8 @@ const About = () => {
   ];
 
   return (
+    <SEO title="Σχετικά" description="Μάθετε για τον Σύλλογο Φίλων Στήριξης Κέντρου Υγείας Τροπαίων — ιστορία, αξίες και διοίκηση." url="/about" />,
+
     <div className="bg-[#faf8f4] text-slate-900 min-h-screen">
 
       {/* ══════════════════════════════════════════════════
